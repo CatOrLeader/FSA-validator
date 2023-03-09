@@ -53,4 +53,60 @@ class InputMalformedException extends Exception {
     }
 }
 
+class WarningDoesNotExistException extends Exception {
+    @Override
+    public String toString() {
+        return "Error:\nE6: Warning with this number does not exist";
+    }
+}
+
+class ReportFormation {
+    private static final String W1 = "W1: Accepting state is not defined";
+    private static final String W2 = "W2: Some states are not reachable from the initial state";
+    private static final String W3 = "W3: FSA is nondeterministic";
+    private static final String[] warningsMessages = new String[]{W1, W2, W3};
+    boolean[] warningsAppearance = {false, false, false};
+    boolean completeness;
+
+
+    public void markWarning(int warningNumber) {
+        try {
+            if (! (0 <= warningNumber && warningNumber <= 2) ) {
+                throw new WarningDoesNotExistException();
+            }
+
+            warningsAppearance[warningNumber] = true;
+        } catch (WarningDoesNotExistException e) {
+            System.out.println(e.toString());
+            System.exit(0);
+        }
+    }
+
+    public void markCompleteness(boolean isComplete) {
+        completeness = isComplete;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder outputString = new StringBuilder("FSA is ");
+
+        outputString.append(completeness ? "complete\n" : "incomplete\n");
+
+        boolean areWarningsAppear = false;
+        StringBuilder warningMessagesText = new StringBuilder("Warning:\n");
+        for (int i = 0; i < 3; i++) {
+            if (warningsAppearance[i]) {
+                areWarningsAppear = true;
+                warningMessagesText.append(warningsMessages[i]).append("\n");
+            }
+        }
+
+        if (areWarningsAppear) {
+            outputString.append(warningMessagesText);
+        }
+
+        return outputString.toString();
+    }
+}
+
 
