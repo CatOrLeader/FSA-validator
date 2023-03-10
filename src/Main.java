@@ -2,6 +2,7 @@
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class Main {
@@ -20,7 +21,7 @@ public class Main {
         makeFormattedInput();
 
         try {
-            if (checker.isDisjoint(states)) {
+            if (checker.isDisjoint(states, initialState)) {
                 throw new DisjointStatesException();
             }
         } catch (DisjointStatesException e) {
@@ -162,7 +163,7 @@ public class Main {
             String[] transitions = string.substring(7, string.length() - 1).split(",");
 
             if (string.substring(7, string.length() - 1).length() == 0) {
-                throw new InputMalformedException();
+                return;
             }
 
             for (String transition : transitions) {
@@ -183,12 +184,9 @@ public class Main {
                     throw new IncorrectStateException(transitionSplit[2]);
                 }
 
-
-
                 sourceState.addPossibleTransition(destState, trans);
             }
-        } catch (IOException | IncorrectStateException | TransitionIsNotPresentedException |
-                InputMalformedException e) {
+        } catch (IOException | IncorrectStateException | TransitionIsNotPresentedException e) {
             writer.write(e.toString());
             reader.close();
             writer.close();
@@ -269,52 +267,17 @@ class Checker {
         return (48 <= c && c <= 57);
     }
 
-    static ArrayList<State>[] matrix = null;
-    static HashMap<State, Boolean> visited = null;
-    static HashMap<State, Integer> colour = null;
-    static boolean isBipartite;
-    public boolean isDisjoint(ArrayList<State> states) {
-        int size = states.size();
-
-        matrix = new ArrayList[size];
-        for (int i = 0; i < size; i++) {
-            matrix[i] = states.get(i).getPossibleStatesToMove();
-
-            if (matrix[i].stream().distinct().toList().size() == 1 && matrix[i].get(0).equals(states.get(i))
-                || matrix[i].size() == 0) {
-                return true;
-            }
-        }
-
-        visited = new HashMap<>();
-        for (State state : states) {
-            visited.put(state, false);
-        }
-        colour = new HashMap<>();
-        for (State state : states) {
-            colour.put(state, -1);
-        }
-
-        isBipartite = true;
-
-        for (State state : states) {
-            if (!visited.get(state)) {
-                bipartiteCheckingStep(state, 0, states);
-            }
-        }
-
-        return !isBipartite;
+    static ArrayList<State> reachedStates = new ArrayList<>();
+    public boolean isDisjoint(ArrayList<State> states, State initialState) {
+        getAllPossibleReachedStates(initialState);
+        return reachedStates.size() != states.size();
     }
 
-    private static void bipartiteCheckingStep(State state, Integer col, ArrayList<State> states) {
-        visited.put(state, true);
-        colour.put(state, col);
-
-        for (State tempState : matrix[states.indexOf(state)]) {
-            if (!visited.get(tempState)) {
-                bipartiteCheckingStep(tempState, col ^ 1, states);
-            } else if (colour.get(tempState).equals(col) && tempState != state) {
-                isBipartite = false;
+    private void getAllPossibleReachedStates(State initialState) {
+        reachedStates.add(initialState);
+        for (State state : initialState.getPossibleStatesToMove()) {
+            if (!reachedStates.contains(state)) {
+                getAllPossibleReachedStates(state);
             }
         }
     }
@@ -325,6 +288,8 @@ class Checker {
             canBeVisited.put(state, false);
         }
 
+        canBeVisited.put(initialState, true);
+
         makeMove(initialState);
 
         return !canBeVisited.containsValue(false);
@@ -333,7 +298,7 @@ class Checker {
     private void makeMove(State state) {
         for (State tempState : state.getPossibleStatesToMove()) {
             if (canBeVisited.get(tempState)) {
-                return;
+                continue;
             }
             canBeVisited.put(tempState, true);
             makeMove(tempState);
@@ -408,14 +373,14 @@ class IncorrectStateException extends Exception {
         this.stateName = stateName;
     }
     public String toString() {
-        return "Error:\nE1: A state '" + stateName + "' is not in the set of states";
+        return "Error:\nE1: A state '" + stateName + "' is not in the set of states\n";
     }
 }
 
 class DisjointStatesException extends Exception {
     @Override
     public String toString() {
-        return "Error:\nE2: Some states are disjoint";
+        return "Error:\nE2: Some states are disjoint\n";
     }
 }
 
@@ -425,28 +390,28 @@ class TransitionIsNotPresentedException extends Exception {
         this.transitionName = transitionName;
     }
     public String toString() {
-        return "Error:\nE3: A transition '" + transitionName +  "' is not represented in the alphabet";
+        return "Error:\nE3: A transition '" + transitionName +  "' is not represented in the alphabet\n";
     }
 }
 
 class InitialStateNotDefinedException extends Exception {
     @Override
     public String toString() {
-        return "Error:\nE4: Initial state is not defined";
+        return "Error:\nE4: Initial state is not defined\n";
     }
 }
 
 class InputMalformedException extends Exception {
     @Override
     public String toString() {
-        return "Error:\nE5: Input file is malformed";
+        return "Error:\nE5: Input file is malformed\n";
     }
 }
 
 class WarningDoesNotExistException extends Exception {
     @Override
     public String toString() {
-        return "Error:\nE6: Warning with this number does not exist";
+        return "Error:\nE6: Warning with this number does not exist\n";
     }
 }
 
