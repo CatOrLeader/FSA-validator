@@ -1,0 +1,5 @@
+states=[]
+alpha=[turn_on,turn_off]
+init.st=[mid]
+fin.st=[]
+trans=[]
