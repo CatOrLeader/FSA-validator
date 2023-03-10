@@ -1,5 +1,0 @@
-states=[q0,q1,q2]
-alpha=[a,b,c,d]
-init.st=[q0]
-fin.st=[q1]
-trans=[q0>a>q0,q0>b>q1,q2>a>q1]
