@@ -268,9 +268,46 @@ class Checker {
     }
 
     static ArrayList<State> reachedStates = new ArrayList<>();
+    static ArrayList<State> undirectedStates = new ArrayList<>();
     public boolean isDisjoint(ArrayList<State> states, State initialState) {
-        getAllPossibleReachedStates(initialState);
+        makeStatesUndirected(states);
+        getAllPossibleReachedStates(undirectedStates.get(undirectedStates.indexOf(getState(initialState))));
         return reachedStates.size() != states.size();
+    }
+
+    private void makeStatesUndirected(ArrayList<State> states) {
+        for (State state : states) {
+            State newState = new State(state.getName());
+            undirectedStates.add(newState);
+        }
+
+        for (State state : states) {
+            for (State stateInner : state.getPossibleStatesToMove()) {
+                undirectedStates.get(undirectedStates.indexOf(getState(state))).addPossibleTransition(
+                        undirectedStates.get(undirectedStates.indexOf(getState(stateInner))), null
+                );
+            }
+        }
+
+        for (State state : undirectedStates) {
+            ArrayList<State> tempList = (ArrayList<State>) state.getPossibleStatesToMove().clone();
+            for (State innerState : tempList) {
+                innerState.addPossibleTransition(state, null);
+            }
+        }
+
+        for (State state : undirectedStates) {
+            state.possibleStatesToMove = new ArrayList<>(state.getPossibleStatesToMove().stream().distinct().toList());
+        }
+    }
+
+    private State getState(State state) {
+        for (State stateUnd : undirectedStates) {
+            if (stateUnd.getName().equals(state.getName())) {
+                return stateUnd;
+            }
+        }
+        return null;
     }
 
     private void getAllPossibleReachedStates(State initialState) {
